@@ -19,22 +19,27 @@ if (isPostgres) {
     ssl: { rejectUnauthorized: false }
   });
 } else {
-  const dbPath = process.env.DATABASE_FILE 
-    ? path.resolve(process.cwd(), process.env.DATABASE_FILE)
-    : path.resolve(__dirname, '../../engiverse.sqlite');
+  try {
+    const isNetlify = Boolean(process.env.NETLIFY || process.env.AWS_LAMBDA_FUNCTION_NAME);
+    const dbPath = isNetlify 
+      ? '/tmp/engiverse.sqlite'
+      : (process.env.DATABASE_FILE ? path.resolve(process.cwd(), process.env.DATABASE_FILE) : path.resolve(__dirname, '../../engiverse.sqlite'));
 
-  const dbDir = path.dirname(dbPath);
-  if (!fs.existsSync(dbDir)) {
-    fs.mkdirSync(dbDir, { recursive: true });
-  }
-
-  sqliteDb = new sqlite3.Database(dbPath, (err) => {
-    if (err) {
-      console.error('Error connecting to local SQLite database:', err.message);
-    } else {
-      console.log('Connected to Engiverse SQLite database at:', dbPath);
+    const dbDir = path.dirname(dbPath);
+    if (!fs.existsSync(dbDir)) {
+      try { fs.mkdirSync(dbDir, { recursive: true }); } catch {}
     }
-  });
+
+    sqliteDb = new sqlite3.Database(dbPath, (err) => {
+      if (err) {
+        console.error('Error connecting to local SQLite database:', err.message);
+      } else {
+        console.log('Connected to Engiverse SQLite database at:', dbPath);
+      }
+    });
+  } catch (err: any) {
+    console.error('SQLite initialization notice:', err.message);
+  }
 }
 
 function normalizeSql(sql: string): string {
