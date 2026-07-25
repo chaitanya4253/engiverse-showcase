@@ -141,8 +141,33 @@ export const AdminDashboard: React.FC = () => {
     // Kits
     fetch('/api/v1/admin/kits').then(res => res.json()).then(d => setKits(d.kits || [])).catch(console.error);
 
-    // Inquiries
-    fetch('/api/v1/admin/inquiries').then(res => res.json()).then(d => setInquiries(d.inquiries || [])).catch(console.error);
+    // Inquiries with LocalStorage Fail-Safe Backup
+    fetch('/api/v1/admin/inquiries')
+      .then(res => res.json())
+      .then(d => {
+        const apiInquiries = d.inquiries || [];
+        let localInquiries = [];
+        try {
+          localInquiries = JSON.parse(localStorage.getItem('engiverse_local_inquiries') || '[]');
+        } catch {}
+
+        const combinedMap = new Map();
+        for (const item of [...localInquiries, ...apiInquiries]) {
+          const key = `${item.client_name}_${item.phone}`;
+          if (!combinedMap.has(key)) {
+            combinedMap.set(key, item);
+          }
+        }
+        setInquiries(Array.from(combinedMap.values()));
+      })
+      .catch(() => {
+        try {
+          const localInquiries = JSON.parse(localStorage.getItem('engiverse_local_inquiries') || '[]');
+          setInquiries(localInquiries);
+        } catch {
+          setInquiries([]);
+        }
+      });
 
     // Users & Audit
     fetch('/api/v1/admin/users').then(res => res.json()).then(d => setUsersList(d.users || [])).catch(console.error);

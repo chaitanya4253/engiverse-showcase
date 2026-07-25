@@ -17,6 +17,7 @@ router.get('/public/services', publicController.getServicesPublic);
 router.get('/public/projects', publicController.getProjectsPublic);
 router.get('/public/kits', publicController.getKitsPublic);
 router.post('/public/inquire', publicController.submitInquiry);
+router.post('/public/inquiries', publicController.submitInquiry);
 
 // Setup & Authentication Endpoints
 router.get('/auth/setup-status', authController.checkSetupStatus);
