@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: engiverse-backend-api
+    env: node
+    rootDir: server
+    buildCommand: npm install --include=dev && npm run build
+    startCommand: node dist/index.js
