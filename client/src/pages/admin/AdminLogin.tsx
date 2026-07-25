@@ -40,7 +40,14 @@ export const AdminLogin: React.FC = () => {
         body: JSON.stringify({ usernameOrEmail: username, password })
       });
 
-      const data = await res.json();
+      const text = await res.text();
+      let data: any = {};
+      try {
+        data = JSON.parse(text);
+      } catch (e) {
+        throw new Error('Backend server is initializing or waking up on Render. Please wait 15-20 seconds and click Secure Admin Login again.');
+      }
+
       if (!res.ok) {
         throw new Error(data.error || 'Login failed.');
       }
