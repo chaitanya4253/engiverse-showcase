@@ -12,6 +12,8 @@ const isPostgres = Boolean(supabaseUrl && (supabaseUrl.startsWith('postgres://')
 let pgPool: Pool | null = null;
 let sqliteDb: sqlite3.Database | null = null;
 
+export const inMemoryInquiries: any[] = [];
+
 if (isPostgres) {
   console.log('⚡ Connecting to Supabase Cloud PostgreSQL Database...');
   pgPool = new Pool({

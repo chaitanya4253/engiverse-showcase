@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { dbAll, dbGet, dbRun } from '../db/database';
+import { dbAll, dbGet, dbRun, inMemoryInquiries } from '../db/database';
 import { logAuditEvent, extractClientMeta } from '../middleware/auditLogger';
 
 const defaultConfigs: Record<string, any> = {
@@ -134,6 +134,19 @@ export const submitInquiry = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Name, phone number, and inquiry message are required.' });
     }
 
+    const newInquiry = {
+      id: Date.now(),
+      client_name,
+      phone,
+      email: email || '',
+      service_category: service_category || 'General',
+      project_title: project_title || '',
+      message,
+      status: 'new',
+      created_at: new Date().toISOString()
+    };
+    inMemoryInquiries.unshift(newInquiry);
+
     try {
       await dbRun(
         `INSERT INTO inquiries (client_name, phone, email, service_category, project_title, message, status)
@@ -156,7 +169,7 @@ export const submitInquiry = async (req: Request, res: Response) => {
 
     return res.json({
       message: 'Thank you! Your inquiry has been submitted successfully. Engiverse team will contact you shortly.',
-      inquiryId: Date.now()
+      inquiryId: newInquiry.id
     });
   } catch (err: any) {
     return res.json({

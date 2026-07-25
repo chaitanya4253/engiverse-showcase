@@ -1,6 +1,6 @@
 import { Response } from 'express';
 import bcrypt from 'bcryptjs';
-import { dbAll, dbGet, dbRun } from '../db/database';
+import { dbAll, dbGet, dbRun, inMemoryInquiries } from '../db/database';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { logAuditEvent, extractClientMeta } from '../middleware/auditLogger';
 
@@ -338,10 +338,17 @@ export const deleteKit = async (req: AuthenticatedRequest, res: Response) => {
 // 5. Inquiries & Leads Management
 export const getAllInquiriesAdmin = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const inquiries = await dbAll('SELECT * FROM inquiries ORDER BY created_at DESC');
-    return res.json({ inquiries });
+    const dbInquiries = await dbAll('SELECT * FROM inquiries ORDER BY created_at DESC');
+    const combinedMap = new Map();
+    for (const inq of [...inMemoryInquiries, ...dbInquiries]) {
+      const key = `${inq.client_name}_${inq.phone}_${inq.id}`;
+      if (!combinedMap.has(key)) {
+        combinedMap.set(key, inq);
+      }
+    }
+    return res.json({ inquiries: Array.from(combinedMap.values()) });
   } catch (err: any) {
-    return res.status(500).json({ error: 'Failed to fetch inquiries.' });
+    return res.json({ inquiries: inMemoryInquiries });
   }
 };
 
