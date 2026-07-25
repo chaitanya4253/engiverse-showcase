@@ -8,10 +8,8 @@ import { initDatabase } from './db/database';
 
 const app = express();
 
-// Initialize DB schema asynchronously
 initDatabase().catch(err => console.error('Database init notice:', err.message));
 
-// 1. Security Headers (Helmet)
 app.use(
   helmet({
     contentSecurityPolicy: false,
@@ -19,7 +17,6 @@ app.use(
   })
 );
 
-// 2. CORS Policy (Allow all origins for serverless & local)
 app.use(
   cors({
     origin: true,
@@ -29,18 +26,17 @@ app.use(
   })
 );
 
-// 3. Body Parsing & Limiters
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 app.use(cookieParser());
 
-// 4. Rate Limiter on API
 app.use('/api', apiRateLimiter);
 
-// 5. Mount API Routes
+// Mount API Routes flexibly across paths
 app.use('/api/v1', apiRouter);
+app.use('/v1', apiRouter);
+app.use('/api', apiRouter);
 
-// 6. Root Healthcheck Endpoint
 app.get('/health', (req: Request, res: Response) => {
   res.json({
     status: 'ONLINE',
@@ -58,7 +54,6 @@ app.get('/api/health', (req: Request, res: Response) => {
   });
 });
 
-// 7. Centralized Error Handler
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   console.error('[SERVER_ERROR]', err.message || err);
   return res.status(err.status || 500).json({
