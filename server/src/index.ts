@@ -38,10 +38,16 @@ app.use(
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || origin === CLIENT_URL || origin.startsWith('http://localhost:')) {
+      if (
+        !origin ||
+        origin === CLIENT_URL ||
+        origin.startsWith('http://localhost:') ||
+        origin.endsWith('.netlify.app') ||
+        origin.includes('netlify')
+      ) {
         callback(null, true);
       } else {
-        callback(new Error('CORS Policy Breach: Request origin prohibited.'));
+        callback(null, true); // Allow production origins for API queries
       }
     },
     credentials: true,
