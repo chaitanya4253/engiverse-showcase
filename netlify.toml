@@ -3,9 +3,12 @@
   command = "npm run build"
   publish = "dist"
 
+[functions]
+  directory = "../netlify/functions"
+
 [[redirects]]
   from = "/api/*"
-  to = "https://engiverse-backend-api.onrender.com/api/:splat"
+  to = "/.netlify/functions/api/api/:splat"
   status = 200
 
 [[redirects]]

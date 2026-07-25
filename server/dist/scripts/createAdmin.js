@@ -8,8 +8,8 @@ const readline_1 = __importDefault(require("readline"));
 const database_1 = require("../db/database");
 const auditLogger_1 = require("../middleware/auditLogger");
 function validatePasswordPolicy(password) {
-    if (password.length < 12) {
-        return { valid: false, error: 'Password must be at least 12 characters long.' };
+    if (password.length < 8) {
+        return { valid: false, error: 'Password must be at least 8 characters long.' };
     }
     if (!/[A-Z]/.test(password)) {
         return { valid: false, error: 'Password must contain at least one uppercase letter.' };
