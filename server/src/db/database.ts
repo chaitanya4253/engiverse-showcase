@@ -37,7 +37,6 @@ if (isPostgres) {
   });
 }
 
-// Convert '?' placeholder in SQL queries to PostgreSQL '$1, $2, $3' syntax if using Postgres
 function normalizeSql(sql: string): string {
   if (!isPostgres) return sql;
   let paramIndex = 1;
@@ -48,7 +47,6 @@ export const dbRun = async (sql: string, params: any[] = []): Promise<{ lastID: 
   const normSql = normalizeSql(sql);
 
   if (isPostgres && pgPool) {
-    // Modify RETURNING id for INSERT queries if postgres
     let querySql = normSql;
     if (/^\s*INSERT\s+INTO/i.test(querySql) && !/RETURNING/i.test(querySql)) {
       querySql += ' RETURNING id';
@@ -104,24 +102,120 @@ export const dbAll = async <T = any>(sql: string, params: any[] = []): Promise<T
 
 export async function initDatabase() {
   if (isPostgres) {
-    console.log('✅ Supabase PostgreSQL Pool initialized.');
+    console.log('⚡ Initializing Supabase Cloud PostgreSQL Tables & Default Seed Data...');
     try {
-      const userCount = await dbGet('SELECT COUNT(*) as count FROM users');
-      const cnt = userCount ? Number(userCount.count || userCount.COUNT || 0) : 0;
-      if (cnt === 0) {
-        console.log('⚡ Initializing default admin user in Supabase PostgreSQL...');
-        const defaultHash = '$2a$12$Rw8dluH.5xHGAThA1Ry42uqe8O3Y7Rr0/7SA3TiJWwygHBYw08NsS';
-        await dbRun(
-          `INSERT INTO users (username, email, password_hash, role, is_active)
-           VALUES ($1, $2, $3, $4, $5)
-           ON CONFLICT (username) DO UPDATE SET password_hash = $3`,
-          ['engiverse_lead', 'chaitanyasoni40@gmail.com', defaultHash, 'Super Admin', 1]
-        );
-        console.log('✅ Default Admin user engiverse_lead auto-seeded in Supabase PostgreSQL!');
-      }
+      await dbRun(`
+        CREATE TABLE IF NOT EXISTS users (
+          id SERIAL PRIMARY KEY,
+          username VARCHAR(255) UNIQUE NOT NULL,
+          email VARCHAR(255) UNIQUE NOT NULL,
+          password_hash TEXT NOT NULL,
+          role VARCHAR(50) NOT NULL DEFAULT 'Admin',
+          is_active INT NOT NULL DEFAULT 1,
+          last_login TIMESTAMP WITH TIME ZONE,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      await dbRun(`
+        CREATE TABLE IF NOT EXISTS services (
+          id SERIAL PRIMARY KEY,
+          title VARCHAR(255) NOT NULL,
+          slug VARCHAR(255) UNIQUE NOT NULL,
+          category VARCHAR(255) NOT NULL,
+          description TEXT NOT NULL,
+          features_json TEXT NOT NULL DEFAULT '[]',
+          price_range VARCHAR(255),
+          is_active INT NOT NULL DEFAULT 1,
+          sort_order INT NOT NULL DEFAULT 0,
+          updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      await dbRun(`
+        CREATE TABLE IF NOT EXISTS projects (
+          id SERIAL PRIMARY KEY,
+          title VARCHAR(255) NOT NULL,
+          category VARCHAR(255) NOT NULL,
+          short_desc TEXT NOT NULL,
+          full_desc TEXT NOT NULL,
+          technologies_json TEXT NOT NULL DEFAULT '[]',
+          image_url TEXT,
+          demo_url TEXT,
+          features_json TEXT NOT NULL DEFAULT '[]',
+          featured INT NOT NULL DEFAULT 0,
+          is_active INT NOT NULL DEFAULT 1,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      await dbRun(`
+        CREATE TABLE IF NOT EXISTS trainer_kits (
+          id SERIAL PRIMARY KEY,
+          title VARCHAR(255) NOT NULL,
+          subtitle VARCHAR(255),
+          category VARCHAR(255) NOT NULL,
+          description TEXT NOT NULL,
+          features_json TEXT NOT NULL DEFAULT '[]',
+          specs_json TEXT NOT NULL DEFAULT '{}',
+          status VARCHAR(50) NOT NULL DEFAULT 'coming_soon',
+          image_url TEXT,
+          preorder_count INT NOT NULL DEFAULT 0,
+          updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      await dbRun(`
+        CREATE TABLE IF NOT EXISTS inquiries (
+          id SERIAL PRIMARY KEY,
+          client_name VARCHAR(255) NOT NULL,
+          phone VARCHAR(255) NOT NULL,
+          email VARCHAR(255),
+          service_category VARCHAR(255) NOT NULL,
+          project_title VARCHAR(255),
+          message TEXT NOT NULL,
+          status VARCHAR(50) NOT NULL DEFAULT 'new',
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      await dbRun(`
+        CREATE TABLE IF NOT EXISTS site_config (
+          key VARCHAR(255) PRIMARY KEY,
+          value TEXT NOT NULL,
+          updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      await dbRun(`
+        CREATE TABLE IF NOT EXISTS audit_logs (
+          id SERIAL PRIMARY KEY,
+          user_id INT,
+          username VARCHAR(255),
+          action VARCHAR(255) NOT NULL,
+          details TEXT,
+          ip_address VARCHAR(255),
+          user_agent TEXT,
+          severity VARCHAR(50) NOT NULL DEFAULT 'info',
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      // Seed Default Admin User: engiverse_lead / @BERojgar59
+      const defaultHash = '$2a$12$Rw8dluH.5xHGAThA1Ry42uqe8O3Y7Rr0/7SA3TiJWwygHBYw08NsS';
+      await dbRun(
+        `INSERT INTO users (username, email, password_hash, role, is_active)
+         VALUES ($1, $2, $3, $4, $5)
+         ON CONFLICT (username) DO UPDATE SET password_hash = $3`,
+        ['engiverse_lead', 'chaitanyasoni40@gmail.com', defaultHash, 'Super Admin', 1]
+      );
+
+      console.log('✅ Supabase PostgreSQL Tables & Admin User (engiverse_lead) fully initialized!');
     } catch (err: any) {
-      console.error('Supabase auto-seed notice:', err.message);
+      console.error('Supabase auto-initialization notice:', err.message);
     }
+    await seedInitialData();
     return;
   }
 
@@ -235,7 +329,7 @@ export async function initDatabase() {
 
 async function seedInitialData() {
   const existingConfig = await dbGet('SELECT COUNT(*) as count FROM site_config');
-  if (!existingConfig || Number(existingConfig.count) === 0) {
+  if (!existingConfig || Number(existingConfig.count || (existingConfig as any).COUNT || 0) === 0) {
     const defaultConfigs: Record<string, any> = {
       brand_name: "Engiverse",
       tagline: "Engineering Showcase, Web Development & Electronics Innovation",
@@ -249,15 +343,22 @@ async function seedInitialData() {
     };
 
     for (const [key, val] of Object.entries(defaultConfigs)) {
-      await dbRun(
-        'INSERT OR REPLACE INTO site_config (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)',
-        [key, typeof val === 'object' ? JSON.stringify(val) : String(val)]
-      );
+      if (isPostgres) {
+        await dbRun(
+          'INSERT INTO site_config (key, value, updated_at) VALUES ($1, $2, CURRENT_TIMESTAMP) ON CONFLICT (key) DO UPDATE SET value = $2',
+          [key, typeof val === 'object' ? JSON.stringify(val) : String(val)]
+        );
+      } else {
+        await dbRun(
+          'INSERT OR REPLACE INTO site_config (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)',
+          [key, typeof val === 'object' ? JSON.stringify(val) : String(val)]
+        );
+      }
     }
   }
 
   const existingServices = await dbGet('SELECT COUNT(*) as count FROM services');
-  if (!existingServices || Number(existingServices.count) === 0) {
+  if (!existingServices || Number(existingServices.count || (existingServices as any).COUNT || 0) === 0) {
     const services = [
       {
         title: "Web Site Development for Local Business",
@@ -322,11 +423,19 @@ async function seedInitialData() {
     ];
 
     for (const s of services) {
-      await dbRun(
-        `INSERT INTO services (title, slug, category, description, features_json, price_range, sort_order) 
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [s.title, s.slug, s.category, s.description, s.features_json, s.price_range, s.sort_order]
-      );
+      if (isPostgres) {
+        await dbRun(
+          `INSERT INTO services (title, slug, category, description, features_json, price_range, sort_order) 
+           VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (slug) DO NOTHING`,
+          [s.title, s.slug, s.category, s.description, s.features_json, s.price_range, s.sort_order]
+        );
+      } else {
+        await dbRun(
+          `INSERT INTO services (title, slug, category, description, features_json, price_range, sort_order) 
+           VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          [s.title, s.slug, s.category, s.description, s.features_json, s.price_range, s.sort_order]
+        );
+      }
     }
   }
 }
