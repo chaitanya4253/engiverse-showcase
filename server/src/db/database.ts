@@ -105,6 +105,23 @@ export const dbAll = async <T = any>(sql: string, params: any[] = []): Promise<T
 export async function initDatabase() {
   if (isPostgres) {
     console.log('✅ Supabase PostgreSQL Pool initialized.');
+    try {
+      const userCount = await dbGet('SELECT COUNT(*) as count FROM users');
+      const cnt = userCount ? Number(userCount.count || userCount.COUNT || 0) : 0;
+      if (cnt === 0) {
+        console.log('⚡ Initializing default admin user in Supabase PostgreSQL...');
+        const defaultHash = '$2a$12$Rw8dluH.5xHGAThA1Ry42uqe8O3Y7Rr0/7SA3TiJWwygHBYw08NsS';
+        await dbRun(
+          `INSERT INTO users (username, email, password_hash, role, is_active)
+           VALUES ($1, $2, $3, $4, $5)
+           ON CONFLICT (username) DO UPDATE SET password_hash = $3`,
+          ['engiverse_lead', 'chaitanyasoni40@gmail.com', defaultHash, 'Super Admin', 1]
+        );
+        console.log('✅ Default Admin user engiverse_lead auto-seeded in Supabase PostgreSQL!');
+      }
+    } catch (err: any) {
+      console.error('Supabase auto-seed notice:', err.message);
+    }
     return;
   }
 

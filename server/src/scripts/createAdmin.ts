@@ -5,8 +5,8 @@ import { initDatabase, dbGet, dbRun } from '../db/database';
 import { logAuditEvent } from '../middleware/auditLogger';
 
 function validatePasswordPolicy(password: string): { valid: boolean; error?: string } {
-  if (password.length < 12) {
-    return { valid: false, error: 'Password must be at least 12 characters long.' };
+  if (password.length < 8) {
+    return { valid: false, error: 'Password must be at least 8 characters long.' };
   }
   if (!/[A-Z]/.test(password)) {
     return { valid: false, error: 'Password must contain at least one uppercase letter.' };

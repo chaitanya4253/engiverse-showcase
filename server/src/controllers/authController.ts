@@ -31,8 +31,9 @@ function validatePasswordPolicy(password: string): { valid: boolean; error?: str
 export const checkSetupStatus = async (req: Request, res: Response) => {
   try {
     const userCount = await dbGet('SELECT COUNT(*) as count FROM users');
-    const isConfigured = userCount && userCount.count > 0;
-    return res.json({ isConfigured: Boolean(isConfigured) });
+    const cnt = userCount ? Number(userCount.count || userCount.COUNT || 0) : 0;
+    const isConfigured = cnt > 0;
+    return res.json({ isConfigured });
   } catch (err: any) {
     return res.status(500).json({ error: 'Internal server error while checking setup status.' });
   }
