@@ -32,24 +32,19 @@ app.use(cookieParser());
 
 app.use('/api', apiRateLimiter);
 
-// Mount API Routes flexibly across paths
+// Mount API Routes across all possible Netlify & Express path prefixes
+app.use('/.netlify/functions/api/v1', apiRouter);
+app.use('/.netlify/functions/api', apiRouter);
 app.use('/api/v1', apiRouter);
 app.use('/v1', apiRouter);
 app.use('/api', apiRouter);
+app.use('/', apiRouter);
 
 app.get('/health', (req: Request, res: Response) => {
   res.json({
     status: 'ONLINE',
     system: 'Engiverse Netlify Serverless API',
     security: 'HARDENED_OWASP_COMPLIANT',
-    timestamp: new Date().toISOString()
-  });
-});
-
-app.get('/api/health', (req: Request, res: Response) => {
-  res.json({
-    status: 'ONLINE',
-    system: 'Engiverse Netlify Serverless API',
     timestamp: new Date().toISOString()
   });
 });
