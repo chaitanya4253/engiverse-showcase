@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Send, CheckCircle2, AlertCircle, Phone, Mail, User } from 'lucide-react';
+import { X, Send, CheckCircle2, AlertCircle, Phone, Mail, User, MessageCircle } from 'lucide-react';
 
 interface InquiryModalProps {
   isOpen: boolean;
@@ -17,16 +17,25 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({ isOpen, onClose, def
     message: ''
   });
 
+  const [submittedData, setSubmittedData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
 
   if (!isOpen) return null;
 
+  const getWaLink = (phoneNum: string) => {
+    if (!submittedData) return `https://wa.me/${phoneNum}`;
+    const text = `🚨 *NEW ENGIVERSE LEAD INQUIRY*\n\n👤 *Client Name:* ${submittedData.client_name}\n📞 *Phone:* ${submittedData.phone}\n📧 *Email:* ${submittedData.email || 'N/A'}\n🏷️ *Category:* ${submittedData.service_category}\n💬 *Message:* ${submittedData.message}`;
+    return `https://wa.me/${phoneNum}?text=${encodeURIComponent(text)}`;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+
+    setSubmittedData({ ...formData });
 
     // Save lead to local persistence backup
     const newLead = {
@@ -57,18 +66,14 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({ isOpen, onClose, def
     } finally {
       setSuccess(true);
       setLoading(false);
-      setTimeout(() => {
-        setSuccess(false);
-        onClose();
-        setFormData({
-          client_name: '',
-          phone: '',
-          email: '',
-          service_category: defaultCategory,
-          project_title: '',
-          message: ''
-        });
-      }, 2500);
+      setFormData({
+        client_name: '',
+        phone: '',
+        email: '',
+        service_category: defaultCategory,
+        project_title: '',
+        message: ''
+      });
     }
   };
 
@@ -88,14 +93,40 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({ isOpen, onClose, def
         </button>
 
         {success ? (
-          <div className="py-12 text-center space-y-4">
-            <div className="w-16 h-16 mx-auto rounded-full bg-emerald-500/20 border border-emerald-500/50 flex items-center justify-center text-emerald-400 animate-bounce">
+          <div className="py-8 text-center space-y-4">
+            <div className="w-16 h-16 mx-auto rounded-full bg-emerald-500/20 border border-emerald-500/50 flex items-center justify-center text-emerald-400">
               <CheckCircle2 className="w-10 h-10" />
             </div>
-            <h3 className="text-2xl font-heading font-bold text-white">Inquiry Received!</h3>
-            <p className="text-gray-300 text-sm max-w-md mx-auto">
-              Thank you for contacting Engiverse. Our technical lead will review your message and reach out via call/WhatsApp shortly.
+            <h3 className="text-2xl font-heading font-bold text-white">Inquiry Submitted!</h3>
+            <p className="text-gray-300 text-xs sm:text-sm max-w-md mx-auto">
+              Thank you for contacting Engiverse. Our technical leads will review your inquiry immediately.
             </p>
+
+            <div className="p-4 rounded-2xl bg-emerald-950/60 border border-emerald-500/40 max-w-md mx-auto space-y-2.5">
+              <span className="text-[11px] font-mono text-emerald-400 font-bold uppercase tracking-wider block">
+                ⚡ Send Lead to Team via WhatsApp:
+              </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <a
+                  href={getWaLink('919405456978')}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center space-x-1.5 transition-all shadow-lg"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  <span>WhatsApp #1 (9405456978)</span>
+                </a>
+                <a
+                  href={getWaLink('918010895511')}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center space-x-1.5 transition-all shadow-lg"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  <span>WhatsApp #2 (8010895511)</span>
+                </a>
+              </div>
+            </div>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">

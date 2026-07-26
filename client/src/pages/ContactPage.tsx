@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Phone, Mail, Instagram, Send, ExternalLink, MapPin, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Phone, Mail, Instagram, Send, ExternalLink, MapPin, CheckCircle2, AlertCircle, MessageCircle } from 'lucide-react';
 
 export const ContactPage: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -11,16 +11,24 @@ export const ContactPage: React.FC = () => {
     message: ''
   });
 
+  const [submittedData, setSubmittedData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+
+  const getWaLink = (phoneNum: string) => {
+    if (!submittedData) return `https://wa.me/${phoneNum}`;
+    const text = `🚨 *NEW ENGIVERSE LEAD INQUIRY*\n\n👤 *Client Name:* ${submittedData.client_name}\n📞 *Phone:* ${submittedData.phone}\n📧 *Email:* ${submittedData.email || 'N/A'}\n🏷️ *Category:* ${submittedData.service_category}\n💬 *Message:* ${submittedData.message}`;
+    return `https://wa.me/${phoneNum}?text=${encodeURIComponent(text)}`;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
-    // Save to local persistence as fail-safe backup
+    setSubmittedData({ ...formData });
+
     const newLead = {
       id: Date.now(),
       client_name: formData.client_name,
@@ -39,23 +47,15 @@ export const ContactPage: React.FC = () => {
     } catch {}
 
     try {
-      const res = await fetch('/api/v1/public/inquire', {
+      await fetch('/api/v1/public/inquire', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
       });
-
-      setSuccess(true);
-      setFormData({
-        client_name: '',
-        phone: '',
-        email: '',
-        service_category: 'Web Site Development for Local Business',
-        project_title: '',
-        message: ''
-      });
     } catch (err: any) {
+    } finally {
       setSuccess(true);
+      setLoading(false);
       setFormData({
         client_name: '',
         phone: '',
@@ -64,8 +64,6 @@ export const ContactPage: React.FC = () => {
         project_title: '',
         message: ''
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -151,14 +149,41 @@ export const ContactPage: React.FC = () => {
         {/* Contact Form */}
         <div className="lg:col-span-2 glass-panel p-8 sm:p-10 rounded-3xl border border-gray-800">
           {success ? (
-            <div className="py-12 text-center space-y-4">
+            <div className="py-8 text-center space-y-5">
               <div className="w-16 h-16 mx-auto rounded-full bg-emerald-500/20 border border-emerald-500/50 flex items-center justify-center text-emerald-400">
                 <CheckCircle2 className="w-10 h-10" />
               </div>
-              <h3 className="text-2xl font-heading font-bold text-white">Message Sent Successfully!</h3>
+              <h3 className="text-2xl font-heading font-bold text-white">Inquiry Submitted Successfully!</h3>
               <p className="text-gray-300 text-sm max-w-md mx-auto">
-                Thank you for reaching out to Engiverse. Our team will review your inquiry and respond to your phone call/email promptly.
+                Thank you for reaching out to Engiverse. Your lead has been logged in our system.
               </p>
+
+              {/* Dual WhatsApp Notification Action Box */}
+              <div className="p-5 rounded-2xl bg-emerald-950/60 border border-emerald-500/40 max-w-md mx-auto space-y-3">
+                <span className="text-xs font-mono text-emerald-400 font-bold uppercase tracking-wider block">
+                  ⚡ Send Lead Notification directly on WhatsApp:
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <a
+                    href={getWaLink('919405456978')}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center space-x-2 transition-all shadow-lg shadow-emerald-600/25"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    <span>WhatsApp (9405456978)</span>
+                  </a>
+                  <a
+                    href={getWaLink('918010895511')}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center space-x-2 transition-all shadow-lg shadow-emerald-600/25"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    <span>WhatsApp (8010895511)</span>
+                  </a>
+                </div>
+              </div>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-5">

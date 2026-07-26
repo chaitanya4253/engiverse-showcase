@@ -17,6 +17,8 @@ import {
   Wrench,
   GraduationCap
 } from 'lucide-react';
+import { TestimonialsSection } from '../components/TestimonialsSection';
+import { ProjectModal, ProjectItem } from '../components/ProjectModal';
 
 interface HomeProps {
   onOpenInquiry: (category?: string) => void;
@@ -27,6 +29,7 @@ export const Home: React.FC<HomeProps> = ({ onOpenInquiry }) => {
   const [services, setServices] = useState<any[]>([]);
   const [projects, setProjects] = useState<any[]>([]);
   const [kits, setKits] = useState<any[]>([]);
+  const [selectedProject, setSelectedProject] = useState<ProjectItem | null>(null);
 
   useEffect(() => {
     // Fetch public site config
@@ -345,18 +348,32 @@ export const Home: React.FC<HomeProps> = ({ onOpenInquiry }) => {
                 </div>
               </div>
 
-              <div className="p-6 pt-0">
+              <div className="p-6 pt-0 flex gap-2">
+                <button
+                  onClick={() => setSelectedProject(proj)}
+                  className="flex-1 py-2.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 text-xs font-semibold flex items-center justify-center space-x-1 transition-all"
+                >
+                  <Sparkles className="w-3 h-3 text-cyan-400" />
+                  <span>Case Study</span>
+                </button>
                 <button
                   onClick={() => onOpenInquiry(`Engineering Project Inquiry: ${proj.title}`)}
-                  className="w-full py-2.5 rounded-xl bg-gray-900 hover:bg-cyan-950 border border-gray-800 hover:border-cyan-500/40 text-cyan-300 text-xs font-medium flex items-center justify-center space-x-2 transition-all"
+                  className="flex-1 py-2.5 rounded-xl bg-gray-900 hover:bg-cyan-950 border border-gray-800 hover:border-cyan-500/40 text-cyan-300 text-xs font-medium flex items-center justify-center space-x-1 transition-all"
                 >
-                  <span>Inquire for Guidance</span>
+                  <span>Inquire</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>
           ))}
         </div>
+      </section>
+
+      {/* ------------------------------------------------------------- */}
+      {/* TESTIMONIALS SECTION */}
+      {/* ------------------------------------------------------------- */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <TestimonialsSection />
       </section>
 
       {/* ------------------------------------------------------------- */}
@@ -415,6 +432,12 @@ export const Home: React.FC<HomeProps> = ({ onOpenInquiry }) => {
 
         </div>
       </section>
+
+      <ProjectModal
+        project={selectedProject}
+        onClose={() => setSelectedProject(null)}
+        onOpenInquiry={onOpenInquiry}
+      />
 
     </div>
   );

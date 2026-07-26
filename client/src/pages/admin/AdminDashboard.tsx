@@ -665,6 +665,31 @@ export const AdminDashboard: React.FC = () => {
                 </div>
               </div>
             </div>
+
+            {/* Dual WhatsApp Notification Numbers Card */}
+            <div className="glass-panel p-6 rounded-2xl border border-cyan-500/40 bg-cyan-950/20 space-y-3">
+              <div className="flex items-center space-x-2 text-cyan-400 font-bold text-sm">
+                <MessageCircle className="w-5 h-5" />
+                <span>Dual Direct WhatsApp Lead Notification System</span>
+              </div>
+              <p className="text-xs text-gray-300">
+                Incoming inquiries automatically format full lead details (Name, Phone, Category, Message) and trigger direct 1-click WhatsApp alerts to:
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-mono">
+                <div className="p-3 rounded-xl bg-gray-900 border border-gray-800 flex items-center justify-between">
+                  <span className="text-gray-400">Primary WhatsApp Lead:</span>
+                  <a href="https://wa.me/919405456978" target="_blank" rel="noopener noreferrer" className="text-emerald-400 font-bold hover:underline">
+                    +91 9405456978
+                  </a>
+                </div>
+                <div className="p-3 rounded-xl bg-gray-900 border border-gray-800 flex items-center justify-between">
+                  <span className="text-gray-400">Secondary WhatsApp Lead:</span>
+                  <a href="https://wa.me/918010895511" target="_blank" rel="noopener noreferrer" className="text-emerald-400 font-bold hover:underline">
+                    +91 8010895511
+                  </a>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Search, Filter, GraduationCap, ArrowRight, Code, Cpu, ExternalLink } from 'lucide-react';
+import { Search, Filter, GraduationCap, ArrowRight, Code, Cpu, ExternalLink, Sparkles } from 'lucide-react';
+import { ProjectModal, ProjectItem } from '../components/ProjectModal';
 
 interface ProjectsPageProps {
   onOpenInquiry: (category?: string) => void;
@@ -9,6 +10,7 @@ export const ProjectsPage: React.FC<ProjectsPageProps> = ({ onOpenInquiry }) => 
   const [projects, setProjects] = useState<any[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [selectedProject, setSelectedProject] = useState<ProjectItem | null>(null);
 
   useEffect(() => {
     fetch('/api/v1/public/projects')
@@ -108,18 +110,31 @@ export const ProjectsPage: React.FC<ProjectsPageProps> = ({ onOpenInquiry }) => 
               </div>
             </div>
 
-            <div className="p-6 pt-0">
+            <div className="p-6 pt-0 flex gap-2">
+              <button
+                onClick={() => setSelectedProject(p)}
+                className="flex-1 py-3 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 text-xs font-semibold flex items-center justify-center space-x-1 transition-all"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+                <span>View Details</span>
+              </button>
               <button
                 onClick={() => onOpenInquiry(`Engineering Project Inquiry: ${p.title}`)}
-                className="w-full py-3 rounded-xl bg-gray-900 hover:bg-cyan-950 border border-gray-800 hover:border-cyan-500/40 text-cyan-300 text-xs font-semibold flex items-center justify-center space-x-2 transition-all"
+                className="flex-1 py-3 rounded-xl bg-gray-900 hover:bg-cyan-950 border border-gray-800 hover:border-cyan-500/40 text-cyan-300 text-xs font-semibold flex items-center justify-center space-x-1 transition-all"
               >
-                <span>Request Project Guidance</span>
-                <ArrowRight className="w-4 h-4" />
+                <span>Inquire</span>
+                <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
         ))}
       </div>
+
+      <ProjectModal
+        project={selectedProject}
+        onClose={() => setSelectedProject(null)}
+        onOpenInquiry={onOpenInquiry}
+      />
 
     </div>
   );
