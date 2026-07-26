@@ -375,6 +375,28 @@ export const updateInquiryStatus = async (req: AuthenticatedRequest, res: Respon
   }
 };
 
+export const deleteInquiry = async (req: AuthenticatedRequest, res: Response) => {
+  const { ipAddress, userAgent } = extractClientMeta(req);
+  try {
+    const { id } = req.params;
+    await dbRun('DELETE FROM inquiries WHERE id = ?', [id]);
+
+    await logAuditEvent({
+      userId: req.user?.id,
+      username: req.user?.username,
+      action: 'DELETE_INQUIRY',
+      details: `Deleted lead / spam inquiry ID ${id}`,
+      ipAddress,
+      userAgent,
+      severity: 'warning'
+    });
+
+    return res.json({ message: 'Inquiry deleted successfully.' });
+  } catch (err: any) {
+    return res.status(500).json({ error: 'Failed to delete inquiry.' });
+  }
+};
+
 // 6. Site Config Management (Hero text, Contact Info, Instagram, Custom Theme)
 export const getSiteConfigAdmin = async (req: AuthenticatedRequest, res: Response) => {
   try {

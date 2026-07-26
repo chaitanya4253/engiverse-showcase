@@ -57,6 +57,7 @@ router.delete('/admin/kits/:id', adminAuth, adminController.deleteKit);
 // Admin Inquiries Management
 router.get('/admin/inquiries', adminAuth, adminController.getAllInquiriesAdmin);
 router.put('/admin/inquiries/:id/status', adminAuth, adminController.updateInquiryStatus);
+router.delete('/admin/inquiries/:id', adminAuth, adminController.deleteInquiry);
 
 // Admin Site Config
 router.get('/admin/site-config', adminAuth, adminController.getSiteConfigAdmin);

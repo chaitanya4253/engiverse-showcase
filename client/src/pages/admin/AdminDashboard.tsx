@@ -405,6 +405,24 @@ export const AdminDashboard: React.FC = () => {
     loadDashboardData();
   };
 
+  const handleDeleteInquiry = async (id: any, name: string) => {
+    if (!window.confirm(`Are you sure you want to remove inquiry from "${name}"?`)) return;
+
+    try {
+      await authFetch(`/api/v1/admin/inquiries/${id}`, { method: 'DELETE' });
+    } catch {}
+
+    setInquiries(prev => prev.filter(inq => inq.id !== id));
+
+    try {
+      const local = JSON.parse(localStorage.getItem('engiverse_local_inquiries') || '[]');
+      const filtered = local.filter((item: any) => item.id !== id && item.client_name !== name);
+      localStorage.setItem('engiverse_local_inquiries', JSON.stringify(filtered));
+    } catch {}
+
+    showNotify('success', `Inquiry from '${name}' deleted.`);
+  };
+
   return (
     <div className="min-h-screen bg-[#030712] text-white flex flex-col md:flex-row relative z-10 font-sans">
       
@@ -1119,6 +1137,7 @@ export const AdminDashboard: React.FC = () => {
                     <th className="p-4">Category</th>
                     <th className="p-4">Message</th>
                     <th className="p-4">Status</th>
+                    <th className="p-4 text-right">Action / Remove</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-800">
@@ -1139,6 +1158,16 @@ export const AdminDashboard: React.FC = () => {
                           <option value="contacted">contacted</option>
                           <option value="closed">closed</option>
                         </select>
+                      </td>
+                      <td className="p-4 text-right">
+                        <button
+                          onClick={() => handleDeleteInquiry(inq.id, inq.client_name)}
+                          className="px-3 py-1.5 rounded-lg bg-red-950/60 hover:bg-red-900 border border-red-500/40 text-red-300 text-xs font-bold inline-flex items-center space-x-1 transition-all shadow-md"
+                          title="Remove inquiry or spam"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Delete</span>
+                        </button>
                       </td>
                     </tr>
                   ))}
