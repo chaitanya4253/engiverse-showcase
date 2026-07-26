@@ -655,10 +655,15 @@ export const AdminDashboard: React.FC = () => {
 
               <div className="glass-panel p-6 rounded-2xl border border-violet-500/30 space-y-2">
                 <div className="flex justify-between items-center text-violet-400">
-                  <span className="text-xs font-mono uppercase">Leads / Inquiries</span>
+                  <span className="text-xs font-mono uppercase">Total Client Leads</span>
                   <MessageSquare className="w-5 h-5" />
                 </div>
-                <div className="text-3xl font-bold text-cyan-400">{stats?.newInquiries || 0} New</div>
+                <div className="text-3xl font-bold text-cyan-400">
+                  {inquiries.length > 0 ? inquiries.length : (stats?.totalInquiries || 0)}
+                </div>
+                <p className="text-[11px] font-mono text-gray-400">
+                  {inquiries.filter(i => (i.status || 'new') === 'new').length} New / Uncontacted
+                </p>
               </div>
             </div>
 
