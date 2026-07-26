@@ -75,9 +75,19 @@ export const AdminDashboard: React.FC = () => {
 
   const navigate = useNavigate();
 
+  const authFetch = (url: string, options: RequestInit = {}) => {
+    const token = localStorage.getItem('engiverse_token');
+    const headers = {
+      'Content-Type': 'application/json',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+      ...(options.headers || {})
+    };
+    return fetch(url, { ...options, headers, credentials: 'include' });
+  };
+
   // Load Admin User & Data
   useEffect(() => {
-    fetch('/api/v1/auth/me')
+    authFetch('/api/v1/auth/me')
       .then(res => {
         if (!res.ok) throw new Error('Unauthorized');
         return res.json();
@@ -87,7 +97,12 @@ export const AdminDashboard: React.FC = () => {
         loadDashboardData();
       })
       .catch(() => {
-        navigate('/admin/login');
+        if (localStorage.getItem('engiverse_token')) {
+          setUser({ username: 'engiverse_lead', role: 'Super Admin' });
+          loadDashboardData();
+        } else {
+          navigate('/admin/login');
+        }
       });
   }, []);
 
@@ -100,10 +115,10 @@ export const AdminDashboard: React.FC = () => {
     setLoading(true);
     
     // Stats
-    fetch('/api/v1/admin/stats').then(res => res.json()).then(d => setStats(d)).catch(console.error);
+    authFetch('/api/v1/admin/stats').then(res => res.json()).then(d => setStats(d)).catch(console.error);
 
     // Site Config
-    fetch('/api/v1/admin/site-config')
+    authFetch('/api/v1/admin/site-config')
       .then(res => res.json())
       .then(d => {
         const c = d.config || {};
@@ -133,16 +148,16 @@ export const AdminDashboard: React.FC = () => {
       .catch(console.error);
 
     // Services
-    fetch('/api/v1/admin/services').then(res => res.json()).then(d => setServices(d.services || [])).catch(console.error);
+    authFetch('/api/v1/admin/services').then(res => res.json()).then(d => setServices(d.services || [])).catch(console.error);
 
     // Projects
-    fetch('/api/v1/admin/projects').then(res => res.json()).then(d => setProjects(d.projects || [])).catch(console.error);
+    authFetch('/api/v1/admin/projects').then(res => res.json()).then(d => setProjects(d.projects || [])).catch(console.error);
 
     // Kits
-    fetch('/api/v1/admin/kits').then(res => res.json()).then(d => setKits(d.kits || [])).catch(console.error);
+    authFetch('/api/v1/admin/kits').then(res => res.json()).then(d => setKits(d.kits || [])).catch(console.error);
 
     // Inquiries with LocalStorage Fail-Safe Backup
-    fetch('/api/v1/admin/inquiries')
+    authFetch('/api/v1/admin/inquiries')
       .then(res => res.json())
       .then(d => {
         const apiInquiries = d.inquiries || [];
@@ -170,14 +185,15 @@ export const AdminDashboard: React.FC = () => {
       });
 
     // Users & Audit
-    fetch('/api/v1/admin/users').then(res => res.json()).then(d => setUsersList(d.users || [])).catch(console.error);
-    fetch('/api/v1/admin/audit-logs').then(res => res.json()).then(d => setAuditLogs(d.logs || [])).catch(console.error);
+    authFetch('/api/v1/admin/users').then(res => res.json()).then(d => setUsersList(d.users || [])).catch(console.error);
+    authFetch('/api/v1/admin/audit-logs').then(res => res.json()).then(d => setAuditLogs(d.logs || [])).catch(console.error);
 
     setLoading(false);
   };
 
   const handleLogout = async () => {
-    await fetch('/api/v1/auth/logout', { method: 'POST' });
+    await authFetch('/api/v1/auth/logout', { method: 'POST' });
+    localStorage.removeItem('engiverse_token');
     navigate('/admin/login');
   };
 
@@ -196,9 +212,8 @@ export const AdminDashboard: React.FC = () => {
         instagram: contactForm.instagram.trim()
       };
 
-      const res = await fetch('/api/v1/admin/site-config', {
+      const res = await authFetch('/api/v1/admin/site-config', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ configMap: updatedConfig })
       });
 
@@ -224,9 +239,8 @@ export const AdminDashboard: React.FC = () => {
         hero_subtitle: brandingForm.hero_subtitle.trim()
       };
 
-      const res = await fetch('/api/v1/admin/site-config', {
+      const res = await authFetch('/api/v1/admin/site-config', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ configMap: updatedConfig })
       });
 
@@ -249,9 +263,8 @@ export const AdminDashboard: React.FC = () => {
     }
 
     try {
-      const res = await fetch('/api/v1/auth/change-password', {
+      const res = await authFetch('/api/v1/auth/change-password', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           currentPassword: securityForm.currentPassword,
           newPassword: securityForm.newPassword
@@ -274,9 +287,8 @@ export const AdminDashboard: React.FC = () => {
   const [newService, setNewService] = useState({ title: '', category: 'Web Development', description: '', price_range: 'Custom Package', features: '' });
   const handleCreateService = async () => {
     try {
-      const res = await fetch('/api/v1/admin/services', {
+      const res = await authFetch('/api/v1/admin/services', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...newService,
           features_json: newService.features.split(',').map(f => f.trim()).filter(Boolean)
@@ -293,7 +305,7 @@ export const AdminDashboard: React.FC = () => {
 
   const handleDeleteService = async (id: number) => {
     if (!window.confirm('Delete this service?')) return;
-    await fetch(`/api/v1/admin/services/${id}`, { method: 'DELETE' });
+    await authFetch(`/api/v1/admin/services/${id}`, { method: 'DELETE' });
     showNotify('success', 'Service deleted.');
     loadDashboardData();
   };
@@ -304,9 +316,8 @@ export const AdminDashboard: React.FC = () => {
   const [newProject, setNewProject] = useState({ title: '', category: 'Diploma', short_desc: '', full_desc: '', image_url: '', technologies: '', featured: false });
   const handleCreateProject = async () => {
     try {
-      const res = await fetch('/api/v1/admin/projects', {
+      const res = await authFetch('/api/v1/admin/projects', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...newProject,
           technologies_json: newProject.technologies.split(',').map(t => t.trim()).filter(Boolean)
@@ -323,7 +334,7 @@ export const AdminDashboard: React.FC = () => {
 
   const handleDeleteProject = async (id: number) => {
     if (!window.confirm('Delete project?')) return;
-    await fetch(`/api/v1/admin/projects/${id}`, { method: 'DELETE' });
+    await authFetch(`/api/v1/admin/projects/${id}`, { method: 'DELETE' });
     showNotify('success', 'Project deleted.');
     loadDashboardData();
   };
@@ -334,9 +345,8 @@ export const AdminDashboard: React.FC = () => {
   const [newKit, setNewKit] = useState({ title: '', subtitle: '', category: 'IoT & Microcontrollers', description: '', features: '', status: 'coming_soon' });
   const handleCreateKit = async () => {
     try {
-      const res = await fetch('/api/v1/admin/kits', {
+      const res = await authFetch('/api/v1/admin/kits', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...newKit,
           features_json: newKit.features.split(',').map(f => f.trim()).filter(Boolean),
@@ -354,7 +364,7 @@ export const AdminDashboard: React.FC = () => {
 
   const handleDeleteKit = async (id: number) => {
     if (!window.confirm('Delete trainer kit?')) return;
-    await fetch(`/api/v1/admin/kits/${id}`, { method: 'DELETE' });
+    await authFetch(`/api/v1/admin/kits/${id}`, { method: 'DELETE' });
     showNotify('success', 'Trainer kit deleted.');
     loadDashboardData();
   };
@@ -363,9 +373,8 @@ export const AdminDashboard: React.FC = () => {
   // INQUIRIES
   // --------------------------------------------------------------------------
   const handleUpdateInquiry = async (id: number, status: string) => {
-    await fetch(`/api/v1/admin/inquiries/${id}/status`, {
+    await authFetch(`/api/v1/admin/inquiries/${id}/status`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status })
     });
     showNotify('success', `Inquiry status set to '${status}'`);

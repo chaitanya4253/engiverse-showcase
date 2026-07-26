@@ -12,7 +12,30 @@ const isPostgres = Boolean(supabaseUrl && (supabaseUrl.startsWith('postgres://')
 let pgPool: Pool | null = null;
 let sqliteDb: sqlite3.Database | null = null;
 
-export const inMemoryInquiries: any[] = [];
+export const inMemoryInquiries: any[] = [
+  {
+    id: 101,
+    client_name: "Chaitanya Sonar",
+    phone: "9405456978",
+    email: "sonarchaitany9@gmail.com",
+    service_category: "Web Site Development for Local Business",
+    project_title: "E-Commerce Website Inquiry",
+    message: "Hello Engiverse! I need a custom modern website for my business with WhatsApp ordering integration.",
+    status: "new",
+    created_at: new Date().toISOString()
+  },
+  {
+    id: 102,
+    client_name: "Pratik Deore",
+    phone: "9178010895",
+    email: "pratikdeore917@gmail.com",
+    service_category: "Engineering and Diploma Projects",
+    project_title: "ESP32 Smart Agriculture IoT",
+    message: "Inquiring about full hardware schematics, PCB layout, and Arduino C code for Diploma final year submission.",
+    status: "new",
+    created_at: new Date().toISOString()
+  }
+];
 
 if (isPostgres) {
   console.log('⚡ Connecting to Supabase Cloud PostgreSQL Database...');
@@ -456,6 +479,46 @@ async function seedInitialData() {
           `INSERT INTO services (title, slug, category, description, features_json, price_range, sort_order) 
            VALUES (?, ?, ?, ?, ?, ?, ?)`,
           [s.title, s.slug, s.category, s.description, s.features_json, s.price_range, s.sort_order]
+        );
+      }
+    }
+  }
+
+  const existingInquiries = await dbGet('SELECT COUNT(*) as count FROM inquiries');
+  if (!existingInquiries || Number(existingInquiries.count || (existingInquiries as any).COUNT || 0) === 0) {
+    const sampleInquiries = [
+      {
+        client_name: "Chaitanya Sonar",
+        phone: "9405456978",
+        email: "sonarchaitany9@gmail.com",
+        service_category: "Web Site Development for Local Business",
+        project_title: "E-Commerce Website Inquiry",
+        message: "Hello Engiverse! I need a custom modern website for my business with WhatsApp ordering integration.",
+        status: "new"
+      },
+      {
+        client_name: "Pratik Deore",
+        phone: "9178010895",
+        email: "pratikdeore917@gmail.com",
+        service_category: "Engineering and Diploma Projects",
+        project_title: "ESP32 Smart Agriculture IoT",
+        message: "Inquiring about full hardware schematics, PCB layout, and Arduino C code for Diploma final year submission.",
+        status: "new"
+      }
+    ];
+
+    for (const inq of sampleInquiries) {
+      if (isPostgres) {
+        await dbRun(
+          `INSERT INTO inquiries (client_name, phone, email, service_category, project_title, message, status)
+           VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+          [inq.client_name, inq.phone, inq.email, inq.service_category, inq.project_title, inq.message, inq.status]
+        );
+      } else {
+        await dbRun(
+          `INSERT INTO inquiries (client_name, phone, email, service_category, project_title, message, status)
+           VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          [inq.client_name, inq.phone, inq.email, inq.service_category, inq.project_title, inq.message, inq.status]
         );
       }
     }

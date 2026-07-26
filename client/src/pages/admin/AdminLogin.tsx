@@ -52,6 +52,10 @@ export const AdminLogin: React.FC = () => {
         throw new Error(data.error || 'Login failed.');
       }
 
+      if (data.token) {
+        localStorage.setItem('engiverse_token', data.token);
+      }
+
       setSuccessMsg('Authentication successful! Redirecting to dashboard...');
       setTimeout(() => {
         navigate('/admin/dashboard');
