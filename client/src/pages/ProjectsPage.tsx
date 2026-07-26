@@ -6,6 +6,20 @@ interface ProjectsPageProps {
   onOpenInquiry: (category?: string) => void;
 }
 
+const parseArray = (val: any): string[] => {
+  if (!val) return [];
+  if (Array.isArray(val)) return val;
+  if (typeof val === 'string') {
+    try {
+      const parsed = JSON.parse(val);
+      return Array.isArray(parsed) ? parsed : [parsed];
+    } catch {
+      return val.split(',').map(s => s.trim());
+    }
+  }
+  return [];
+};
+
 export const ProjectsPage: React.FC<ProjectsPageProps> = ({ onOpenInquiry }) => {
   const [projects, setProjects] = useState<any[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
@@ -101,7 +115,7 @@ export const ProjectsPage: React.FC<ProjectsPageProps> = ({ onOpenInquiry }) => 
 
                 {/* Tech Badges */}
                 <div className="flex flex-wrap gap-1.5 pt-2">
-                  {JSON.parse(p.technologies_json || '[]').map((t: string, idx: number) => (
+                  {parseArray(p.technologies_json).map((t: string, idx: number) => (
                     <span key={idx} className="px-2 py-0.5 rounded bg-gray-900 border border-gray-800 text-[10px] text-cyan-300 font-mono">
                       {t}
                     </span>

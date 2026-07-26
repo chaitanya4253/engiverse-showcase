@@ -24,6 +24,20 @@ interface HomeProps {
   onOpenInquiry: (category?: string) => void;
 }
 
+const parseArray = (val: any): string[] => {
+  if (!val) return [];
+  if (Array.isArray(val)) return val;
+  if (typeof val === 'string') {
+    try {
+      const parsed = JSON.parse(val);
+      return Array.isArray(parsed) ? parsed : [parsed];
+    } catch {
+      return val.split(',').map(s => s.trim());
+    }
+  }
+  return [];
+};
+
 export const Home: React.FC<HomeProps> = ({ onOpenInquiry }) => {
   const [config, setConfig] = useState<any>(null);
   const [services, setServices] = useState<any[]>([]);
@@ -339,7 +353,7 @@ export const Home: React.FC<HomeProps> = ({ onOpenInquiry }) => {
                   
                   {/* Tech badges */}
                   <div className="flex flex-wrap gap-1.5 pt-2">
-                    {JSON.parse(proj.technologies_json || '[]').map((tech: string, idx: number) => (
+                    {parseArray(proj.technologies_json).map((tech: string, idx: number) => (
                       <span key={idx} className="px-2 py-0.5 rounded bg-gray-900 border border-gray-800 text-[10px] text-gray-300 font-mono">
                         {tech}
                       </span>
