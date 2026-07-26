@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { Analytics } from '@vercel/analytics/react';
 import { CyberCanvas } from './components/CyberCanvas';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
@@ -74,6 +75,7 @@ export const App: React.FC = () => {
   return (
     <Router>
       <AppContent />
+      <Analytics />
     </Router>
   );
 };
